@@ -35,15 +35,13 @@ color_uci <- 'pink'
 #--------------------- Íconos ---------------------
 
 icono_positivos <- 'fas fa-chart-line'
-icono_activos <- 'fas fa-caret-square-right'
-icono_recuperados <- 'fas fa-check'
-icono_fallecidos <- 'fas fa-cross'
-
+icono_activos <- 'fas fa-diagnoses'
+icono_recuperados <- 'fas fa-heart'
+icono_fallecidos <- 'fas fa-heart'
 icono_nuevos_positivos <- 'fas fa-user-md'
-
-icono_hospitalizados <- 'fas fa-user-md'
-icono_salon <- 'fas fa-user-md'
-icono_uci <- 'fas fa-user-md'
+icono_hospitalizados <- 'fas fa-ambulance'
+icono_salon <- 'fas fa-hospital'
+icono_uci <- 'fas fa-procedures'
 
 #--------------- Otros parámetros -----------------
 
