@@ -150,6 +150,108 @@ sf_fallecidos_cantones_ultima_fecha <-
 
 ```
 
+```{r, include=FALSE}
+#---------------------- Datos de distritos ---------------------
+archivo_general_distritos_old <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_GENERAL_DISTRITOS.csv'
+archivo_general_distritos <- 'https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/covid19/ms/11_17_CSV_DISTRITOS.csv'
+# Carga del archivo CSV en un data frame
+df_general_distritos_sucio_old <- read.csv(archivo_general_distritos_old)
+df_general_distritos_sucio <- read.csv(archivo_general_distritos)
+# Eliminación de filas y columnas que corresponden a encabezados, totales, etc.
+df_general_distritos_ultima_fecha_old <- df_general_distritos_sucio_old[-c(1:5), -c(1, 3, 10, 11)]
+df_general_distritos_ultima_fecha <- df_general_distritos_sucio[-c(1:7), -c(1, 2, 4)]
+# Cambio de nombre de las columnas
+df_general_distritos_ultima_fecha <- 
+  df_general_distritos_ultima_fecha %>%
+  rename(provincia = X.2,
+         canton = X.4,
+         distrito = X.5,
+         positivos = X.6,
+         recuperados = X.7,
+         fallecidos = X.8,
+         activos = X.9
+) %>%  
+  mutate_all(funs(sub("^\\s*$", NA, .))) %>% # Se llenan con NA las celdas con espacios vacíos
+  mutate(distrito = if_else(distrito == "El Carmen", "Carmen", distrito)) %>%
+  mutate(distrito = if_else(distrito == "Valle de La Estrella", "Valle La Estrella", distrito)) %>%
+  mutate(distrito = if_else(distrito == "La Amistad", "La  Amistad", distrito)) %>%
+  fill(c(1,2)) # Se rellenan "hacia abajo" las columnas de provincia y cantón con valor NA
+# Borrado de las filas con valor de NA o de "Sin información de distrito" en la columna de distrito
+df_general_distritos_ultima_fecha <- df_general_distritos_ultima_fecha[!is.na(df_general_distritos_ultima_fecha$distrito), ]
+df_general_distritos_ultima_fecha <- df_general_distritos_ultima_fecha[df_general_distritos_ultima_fecha$distrito != 'Sin información de distrito', ]
+# Conversión a integer de los tipos de datos de las columnas con cifras
+df_general_distritos_ultima_fecha$positivos <- as.integer(df_general_distritos_ultima_fecha$positivos)
+df_general_distritos_ultima_fecha$recuperados <- as.integer(df_general_distritos_ultima_fecha$recuperados)
+df_general_distritos_ultima_fecha$fallecidos <- as.integer(df_general_distritos_ultima_fecha$fallecidos)
+df_general_distritos_ultima_fecha$activos <- as.integer(df_general_distritos_ultima_fecha$activos)
+# Objeto sf de distritos
+# Capa simplificada
+sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_limite_distrital_ign_wgs84.geojson')
+# Capa detallada
+# sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_distritos_ign_wgs84.geojson')
+# Objeto sf de casos general en distritos en la última fecha
+sf_general_distritos_ultima_fecha <-
+  left_join(sf_distritos, df_general_distritos_ultima_fecha, by = c('provincia', 'canton', 'distrito'))
+
+# Datos positivos distrito para gráfico pastel
+df_distritos_positivos_top10 <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (positivos, levels = sort(unique(df_general_distritos_ultima_fecha$positivos)))) %>%
+  select(distrito, positivos) %>%
+  top_n(n = 10, wt = positivos)
+
+df_distritos_positivos_otros <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (positivos, levels = sort(unique(df_general_distritos_ultima_fecha$positivos)))) %>%
+  select(distrito, positivos) %>%
+  slice(11:487)%>%
+  summarize(distrito="otros", positivos = sum(positivos))
+
+df_distritos_pastel_positivos <- rbind(df_distritos_positivos_top10,df_distritos_positivos_otros)
+
+# Datos activos distrito para gráfico pastel
+
+df_distritos_activos_top10 <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (activos, levels = sort(unique(df_general_distritos_ultima_fecha$activos)))) %>%
+  select(distrito, activos) %>%
+  top_n(n = 10, wt = activos)
+
+df_distritos_activos_otros <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (activos, levels = sort(unique(df_general_distritos_ultima_fecha$activos)))) %>%
+  select(distrito, activos) %>%
+  slice(11:487)%>%
+  summarize(distrito="otros", activos = sum(activos))
+
+df_distritos_pastel_activos <- rbind(df_distritos_activos_top10,df_distritos_activos_otros)
+
+# Datos recuperados distrito para gráfico pastel
+df_distritos_recuperados_top10 <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (recuperados, levels = sort(unique(df_general_distritos_ultima_fecha$recuperados)))) %>%
+  select(distrito, recuperados) %>%
+  top_n(n = 10, wt = recuperados)
+
+df_distritos_recuperados_otros <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (recuperados, levels = sort(unique(df_general_distritos_ultima_fecha$recuperados)))) %>%
+  select(distrito, recuperados) %>%
+  slice(11:487)%>%
+  summarize(distrito="otros", recuperados = sum(recuperados))
+
+df_distritos_pastel_recuperados <- rbind(df_distritos_recuperados_top10,df_distritos_recuperados_otros)
+
+# Datos fallecidos distrito para gráfico pastel
+df_distritos_fallecidos_top10 <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (fallecidos, levels = sort(unique(df_general_distritos_ultima_fecha$fallecidos)))) %>%
+  select(distrito, fallecidos) %>%
+  top_n(n = 10, wt = fallecidos)
+
+df_distritos_fallecidos_otros <- (df_general_distritos_ultima_fecha) %>%
+  mutate(distritos= factor (fallecidos, levels = sort(unique(df_general_distritos_ultima_fecha$fallecidos)))) %>%
+  select(distrito, fallecidos) %>%
+  slice(11:487)%>%
+  summarize(distrito="otros", fallecidos = sum(fallecidos))
+
+df_distritos_pastel_fallecidos <- rbind(df_distritos_fallecidos_top10,df_distritos_fallecidos_otros)
+
+```
+
 Resumen
 =======================================================================
 Row {data-height=10}
@@ -264,10 +366,10 @@ plot_ly(data = df_general_pais,
                  hovermode = "compare")
 ```
 
-### Tabla de cantidades de casos en cantones
+### **Tabla de cantidades de casos en distritos**
 ```{r}
-st_drop_geometry(sf_positivos_cantones_ultima_fecha) %>% 
-  select(Provincia = provincia, Canton = canton, Positivos = positivos) %>%
+st_drop_geometry(sf_general_distritos_ultima_fecha) %>% 
+  select(Provincia = provincia, Canton = canton, Distrito = distrito, Positivos = positivos, Activos = activos, Recuperados = recuperados, Fallecidos = fallecidos) %>%
   DT::datatable(rownames = FALSE,
                 options = list(searchHighlight = TRUE, 
                                language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
@@ -297,32 +399,32 @@ valueBox(value = paste(format(df_general_pais_ultima_fecha$positivos, big.mark =
 Row {data-width=400}
 -----------------------------------------------------------------------
 
-### Mapa de casos positivos en cantones
+### Mapa de casos positivos en distritos
 ```{r}
 
 paleta_azul <- colorBin(palette = "Blues", 
-                        domain = sf_positivos_cantones_ultima_fecha$positivos,
+                        domain = sf_general_distritos_ultima_fecha$positivos,
                         bins = 10
                )
 
-leaflet_cantones <- leaflet(sf_positivos_cantones_ultima_fecha) %>% 
+leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>% 
   fitBounds(lng1 = -86, lng2 = -82, lat1 = 8, lat2 = 11) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
   addPolygons(fillColor = ~paleta_azul(positivos), stroke=T, fillOpacity = 1,
               color="black", weight=0.2, opacity= 0.5,
-              group = "Cantones",
-              popup = paste("Provincia: ", sf_positivos_cantones_ultima_fecha$provincia, "<br>",
-                            "Cantón: ", sf_positivos_cantones_ultima_fecha$canton, "<br>",
-                            "Positivos: ", sf_positivos_cantones_ultima_fecha$positivos
+              group = "Distritos",
+              popup = paste("Provincia: ", sf_general_distritos_ultima_fecha$provincia, "<br>",
+                            "Distritos: ", sf_general_distritos_ultima_fecha$distrito, "<br>",
+                            "Positivos: ", sf_general_distritos_ultima_fecha$positivos
                             )
   ) %>%
   addLegend("bottomright", pal = paleta_azul, values = ~positivos,
-    title = "Casos positivos", group = "Cantones",
+    title = "Casos positivos", group = "Distritos",
     opacity = 1
   ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap"),
-    overlayGroups = c("Cantones"),
+    overlayGroups = c("Distritos"),
     options = layersControlOptions(collapsed = TRUE)
   ) %>%  
   addMiniMap(
@@ -332,30 +434,28 @@ leaflet_cantones <- leaflet(sf_positivos_cantones_ultima_fecha) %>%
   )
 
 # Despliegue del mapa
-leaflet_cantones
+leaflet_distritos
 ```
 
-### Gráfico de cantones con mayor cantidad de casos positivos
+### **Gráfico de distritos con mayor cantidad de casos positivos**
 ```{r}
-st_drop_geometry(sf_positivos_cantones_ultima_fecha) %>%
-mutate(canton = factor(canton, levels = canton)) %>%
-top_n(n = 10, wt = positivos) %>%  
-plot_ly(x = ~ canton, 
-        y = ~ positivos, 
-        type = "bar", 
-        text = ~ positivos,
-        textposition = 'auto',
+pastelpositivos <- plot_ly(df_distritos_pastel_positivos,labels = ~ distrito, 
+        values = ~ positivos, 
+        type = "pie", 
+        textposition = 'inside',
         marker = list(color = color_positivos)
 ) %>%
-layout(yaxis = list(title = "Cantidad de casos positivos"),
+layout(title = "Cantidad de casos positivos por distrito", 
+       yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 10,
-                     r = 10,
-                     b = 10,
-                     t = 10,
-                     pad = 2
+       margin = list(l = 120,
+                     r = 120,
+                     b = 120,
+                     t = 120,
+                     pad = 5
                 )
-) 
+)
+pastelpositivos 
 ```
 
 
@@ -380,33 +480,33 @@ valueBox(value = paste(format(df_general_pais_ultima_fecha$activos, big.mark = "
 Row {data-width=400}
 -----------------------------------------------------------------------
 
-### Mapa de casos activos en cantones
+### **Mapa de casos activos en distritos**
 ```{r}
 
 paleta_activos <- colorBin(palette = "Reds", 
-                        domain = sf_activos_cantones_ultima_fecha$activos,
+                        domain = sf_general_distritos_ultima_fecha$activos,
                         bins = 10
                )
 
-leaflet_cantones <- leaflet(sf_activos_cantones_ultima_fecha) %>% 
+leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>% 
   fitBounds(lng1 = -86, lng2 = -82, lat1 = 8, lat2 = 11) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
   addPolygons(fillColor = ~paleta_activos(activos), stroke=T, fillOpacity = 1,
               color="black", weight=0.2, opacity= 0.5,
-              group = "Cantones",
-              popup = paste("Provincia: ", sf_activos_cantones_ultima_fecha$provincia, "<br>",
-                            "Cantón: ", sf_activos_cantones_ultima_fecha$canton, "<br>",
-                            "Activos: ", sf_positivos_cantones_ultima_fecha$activos
+              group = "Distritos",
+              popup = paste("Provincia: ", sf_general_distritos_ultima_fecha$provincia, "<br>",
+                            "Distritos: ", sf_general_distritos_ultima_fecha$distrito, "<br>",
+                            "activos: ", sf_general_distritos_ultima_fecha$activos
                             )
   ) %>%
   addLegend("bottomright", pal = paleta_activos, values = ~activos,
-    title = "Casos activos", group = "Cantones",
+    title = "Casos activos", group = "Distritos",
     opacity = 1
-  ) %>%  
+  ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap"),
-    overlayGroups = c("Cantones"),
-    options = layersControlOptions(collapsed = TRUE)    
+    overlayGroups = c("Distritos"),
+    options = layersControlOptions(collapsed = TRUE)
   ) %>%  
   addMiniMap(
     toggleDisplay = TRUE,
@@ -415,30 +515,28 @@ leaflet_cantones <- leaflet(sf_activos_cantones_ultima_fecha) %>%
   )
 
 # Despliegue del mapa
-leaflet_cantones
+leaflet_distritos
 ```
 
-### Gráfico de cantones con mayor cantidad de casos activos
+### **Gráfico de distritos con mayor cantidad de casos activos**
 ```{r}
-st_drop_geometry(sf_activos_cantones_ultima_fecha) %>%
-mutate(canton = factor(canton, levels = canton)) %>%
-top_n(n = 10, wt = activos) %>%  
-plot_ly(x = ~ canton, 
-        y = ~ activos, 
-        type = "bar", 
-        text = ~ activos,
-        textposition = 'auto',
+pastelactivos <- plot_ly(df_distritos_pastel_activos,labels = ~ distrito, 
+        values = ~ activos, 
+        type = "pie", 
+        textposition = 'inside',
         marker = list(color = color_activos)
 ) %>%
-layout(yaxis = list(title = "Cantidad de casos activos"),
+layout(title = "Cantidad de casos activos por distrito", 
+       yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 10,
-                     r = 10,
-                     b = 10,
-                     t = 10,
-                     pad = 2
+       margin = list(l = 120,
+                     r = 120,
+                     b = 120,
+                     t = 120,
+                     pad = 5
                 )
-) 
+)
+pastelactivos
 ```
 
 Casos recuperados
@@ -462,33 +560,33 @@ valueBox(value = paste(format(df_general_pais_ultima_fecha$RECUPERADOS, big.mark
 Row {data-width=400}
 -----------------------------------------------------------------------
 
-### Mapa de casos recuperados en cantones
+### Mapa de casos recuperados en distritos
 ```{r}
 
 paleta_recuperados <- colorBin(palette = "Greens", 
-                        domain = sf_recuperados_cantones_ultima_fecha$recuperados,
+                        domain = sf_general_distritos_ultima_fecha$recuperados,
                         bins = 10
                )
 
-leaflet_cantones <- leaflet(sf_recuperados_cantones_ultima_fecha) %>% 
+leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>% 
   fitBounds(lng1 = -86, lng2 = -82, lat1 = 8, lat2 = 11) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
   addPolygons(fillColor = ~paleta_recuperados(recuperados), stroke=T, fillOpacity = 1,
               color="black", weight=0.2, opacity= 0.5,
-              group = "Cantones",
-              popup = paste("Provincia: ", sf_recuperados_cantones_ultima_fecha$provincia, "<br>",
-                            "Cantón: ", sf_recuperados_cantones_ultima_fecha$canton, "<br>",
-                            "recuperados: ", sf_positivos_cantones_ultima_fecha$recuperados
+              group = "Distritos",
+              popup = paste("Provincia: ", sf_general_distritos_ultima_fecha$provincia, "<br>",
+                            "Distritos: ", sf_general_distritos_ultima_fecha$distrito, "<br>",
+                            "recuperados: ", sf_general_distritos_ultima_fecha$recuperados
                             )
   ) %>%
   addLegend("bottomright", pal = paleta_recuperados, values = ~recuperados,
-    title = "Casos recuperados", group = "Cantones",
+    title = "Casos recuperados", group = "Distritos",
     opacity = 1
-  ) %>%  
+  ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap"),
-    overlayGroups = c("Cantones"),
-    options = layersControlOptions(collapsed = TRUE)    
+    overlayGroups = c("Distritos"),
+    options = layersControlOptions(collapsed = TRUE)
   ) %>%  
   addMiniMap(
     toggleDisplay = TRUE,
@@ -497,30 +595,28 @@ leaflet_cantones <- leaflet(sf_recuperados_cantones_ultima_fecha) %>%
   )
 
 # Despliegue del mapa
-leaflet_cantones
+leaflet_distritos
 ```
 
-### Gráfico de cantones con mayor cantidad de casos recuperados
+### **Gráfico de distritos con mayor cantidad de casos recuperados**
 ```{r}
-st_drop_geometry(sf_recuperados_cantones_ultima_fecha) %>%
-mutate(canton = factor(canton, levels = canton)) %>%
-top_n(n = 10, wt = recuperados) %>%  
-plot_ly(x = ~ canton, 
-        y = ~ recuperados, 
-        type = "bar", 
-        text = ~ recuperados,
-        textposition = 'auto',
+pastelrecuperados <- plot_ly(df_distritos_pastel_recuperados,labels = ~ distrito, 
+        values = ~ recuperados, 
+        type = "pie", 
+        textposition = 'inside',
         marker = list(color = color_recuperados)
 ) %>%
-layout(yaxis = list(title = "Cantidad de casos recuperados"),
+layout(title = "Cantidad de casos recuperados por distrito", 
+       yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 10,
-                     r = 10,
-                     b = 10,
-                     t = 10,
-                     pad = 2
+       margin = list(l = 120,
+                     r = 120,
+                     b = 120,
+                     t = 120,
+                     pad = 5
                 )
-) 
+)
+pastelrecuperados 
 ```
 
 Casos fallecidos
@@ -545,33 +641,33 @@ valueBox(value = paste(format(df_general_pais_ultima_fecha$fallecidos, big.mark 
 Row {data-width=400}
 -----------------------------------------------------------------------
 
-### Mapa de casos fallecidos en cantones
+### Mapa de casos fallecidos en distritos
 ```{r}
 
 paleta_fallecidos <- colorBin(palette = "Purples", 
-                        domain = sf_fallecidos_cantones_ultima_fecha$fallecidos,
+                        domain = sf_general_distritos_ultima_fecha$fallecidos,
                         bins = 10
                )
 
-leaflet_cantones <- leaflet(sf_fallecidos_cantones_ultima_fecha) %>% 
+leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>% 
   fitBounds(lng1 = -86, lng2 = -82, lat1 = 8, lat2 = 11) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
   addPolygons(fillColor = ~paleta_fallecidos(fallecidos), stroke=T, fillOpacity = 1,
               color="black", weight=0.2, opacity= 0.5,
-              group = "Cantones",
-              popup = paste("Provincia: ", sf_fallecidos_cantones_ultima_fecha$provincia, "<br>",
-                            "Cantón: ", sf_fallecidos_cantones_ultima_fecha$canton, "<br>",
-                            "fallecidos: ", sf_positivos_cantones_ultima_fecha$fallecidos
+              group = "Distritos",
+              popup = paste("Provincia: ", sf_general_distritos_ultima_fecha$provincia, "<br>",
+                            "Distritos: ", sf_general_distritos_ultima_fecha$distrito, "<br>",
+                            "fallecidos: ", sf_general_distritos_ultima_fecha$fallecidos
                             )
   ) %>%
   addLegend("bottomright", pal = paleta_fallecidos, values = ~fallecidos,
-    title = "Casos fallecidos", group = "Cantones",
+    title = "Casos fallecidos", group = "Distritos",
     opacity = 1
-  ) %>%  
+  ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap"),
-    overlayGroups = c("Cantones"),
-    options = layersControlOptions(collapsed = TRUE)    
+    overlayGroups = c("Distritos"),
+    options = layersControlOptions(collapsed = TRUE)
   ) %>%  
   addMiniMap(
     toggleDisplay = TRUE,
@@ -580,28 +676,26 @@ leaflet_cantones <- leaflet(sf_fallecidos_cantones_ultima_fecha) %>%
   )
 
 # Despliegue del mapa
-leaflet_cantones
+leaflet_distritos
 ```
 
-### Gráfico de cantones con mayor cantidad de casos fallecidos
+### **Gráfico de distritos con mayor cantidad de casos fallecidos**
 ```{r}
-st_drop_geometry(sf_fallecidos_cantones_ultima_fecha) %>%
-mutate(canton = factor(canton, levels = canton)) %>%
-top_n(n = 10, wt = fallecidos) %>%  
-plot_ly(x = ~ canton, 
-        y = ~ fallecidos, 
-        type = "bar", 
-        text = ~ fallecidos,
-        textposition = 'auto',
+pastelfallecidos <- plot_ly(df_distritos_pastel_fallecidos,labels = ~ distrito, 
+        values = ~ fallecidos, 
+        type = "pie", 
+        textposition = 'inside',
         marker = list(color = color_fallecidos)
 ) %>%
-layout(yaxis = list(title = "Cantidad de casos fallecidos"),
+layout(title = "Cantidad de casos fallecidos por distrito", 
+       yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 10,
-                     r = 10,
-                     b = 10,
-                     t = 10,
-                     pad = 2
+       margin = list(l = 120,
+                     r = 120,
+                     b = 120,
+                     t = 120,
+                     pad = 5
                 )
-) 
+)
+pastelfallecidos 
 ```
