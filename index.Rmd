@@ -34,13 +34,13 @@ color_uci <- 'pink'
 
 #--------------------- Íconos ---------------------
 
-icono_positivos <- 'fas fa-chart-line'
-icono_activos <- 'fas fa-diagnoses'
-icono_recuperados <- 'fas fa-heart'
-icono_fallecidos <- 'fas fa-heart'
+icono_positivos <- 'fas fa-ambulance'
+icono_activos <- 'fas fa-briefcase-medical'
+icono_recuperados <- 'fas fa-file-medical'
+icono_fallecidos <- 'fas fa-plus'
 icono_nuevos_positivos <- 'fas fa-user-md'
-icono_hospitalizados <- 'fas fa-ambulance'
-icono_salon <- 'fas fa-hospital'
+icono_hospitalizados <- 'fas fa-hospital'
+icono_salon <- 'fas fa-hospital-alt'
 icono_uci <- 'fas fa-procedures'
 
 #--------------- Otros parámetros -----------------
@@ -225,15 +225,12 @@ valueBox(value = paste(format(df_general_pais_ultima_fecha$salon, big.mark = ","
 )
 ```
 
-### En UCI {.value-box}
+### **Hospitalizados en UCI. Capacidad total: 359 camas** {.gauge}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$UCI, big.mark = ","), " (",
-                       round(100 * df_general_pais_ultima_fecha$UCI / df_general_pais_ultima_fecha$hospital, 1), 
-                       "%)", sep = ""), 
-         caption = "Hospitalizados en UCI",
-         icon = icono_uci, 
-         color = color_uci
-)
+UCI <- round(100 * df_general_pais_ultima_fecha$UCI / df_general_pais_ultima_fecha$hospital) 
+gauge(UCI, min = 0, max = 100, gaugeSectors(
+  success = c(0, 33), warning = c(34, 70), danger = c(71, 100)
+), symbol = "%", label = "Ocupación en UCI")
 ```
 
 Row {data-width=400}
