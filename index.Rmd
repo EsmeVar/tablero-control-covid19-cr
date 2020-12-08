@@ -186,9 +186,9 @@ df_general_distritos_ultima_fecha$fallecidos <- as.integer(df_general_distritos_
 df_general_distritos_ultima_fecha$activos <- as.integer(df_general_distritos_ultima_fecha$activos)
 # Objeto sf de distritos
 # Capa simplificada
-sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_limite_distrital_ign_wgs84.geojson')
+#sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_limite_distrital_ign_wgs84.geojson')
 # Capa detallada
-# sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_distritos_ign_wgs84.geojson')
+sf_distritos <- st_read('https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_distritos_ign_wgs84.geojson')
 # Objeto sf de casos general en distritos en la última fecha
 sf_general_distritos_ultima_fecha <-
   left_join(sf_distritos, df_general_distritos_ultima_fecha, by = c('provincia', 'canton', 'distrito'))
@@ -426,7 +426,9 @@ leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>%
     baseGroups = c("OpenStreetMap"),
     overlayGroups = c("Distritos"),
     options = layersControlOptions(collapsed = TRUE)
-  ) %>%  
+  ) %>%
+  addScaleBar(
+  ) %>%
   addMiniMap(
     toggleDisplay = TRUE,
     position = "bottomleft",
@@ -448,10 +450,10 @@ pastelpositivos <- plot_ly(df_distritos_pastel_positivos,labels = ~ distrito,
 layout(title = "Cantidad de casos positivos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 120,
-                     r = 120,
-                     b = 120,
-                     t = 120,
+       margin = list(l = 80,
+                     r = 80,
+                     b = 80,
+                     t = 80,
                      pad = 5
                 )
 )
@@ -507,7 +509,9 @@ leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>%
     baseGroups = c("OpenStreetMap"),
     overlayGroups = c("Distritos"),
     options = layersControlOptions(collapsed = TRUE)
-  ) %>%  
+  ) %>%
+  addScaleBar(
+  ) %>%
   addMiniMap(
     toggleDisplay = TRUE,
     position = "bottomleft",
@@ -529,10 +533,10 @@ pastelactivos <- plot_ly(df_distritos_pastel_activos,labels = ~ distrito,
 layout(title = "Cantidad de casos activos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 120,
-                     r = 120,
-                     b = 120,
-                     t = 120,
+       margin = list(l = 80,
+                     r = 80,
+                     b = 80,
+                     t = 80,
                      pad = 5
                 )
 )
@@ -587,7 +591,9 @@ leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>%
     baseGroups = c("OpenStreetMap"),
     overlayGroups = c("Distritos"),
     options = layersControlOptions(collapsed = TRUE)
-  ) %>%  
+  ) %>%
+  addScaleBar(
+  ) %>%
   addMiniMap(
     toggleDisplay = TRUE,
     position = "bottomleft",
@@ -609,10 +615,10 @@ pastelrecuperados <- plot_ly(df_distritos_pastel_recuperados,labels = ~ distrito
 layout(title = "Cantidad de casos recuperados por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 120,
-                     r = 120,
-                     b = 120,
-                     t = 120,
+       margin = list(l = 80,
+                     r = 80,
+                     b = 80,
+                     t = 80,
                      pad = 5
                 )
 )
@@ -668,7 +674,9 @@ leaflet_distritos <- leaflet(sf_general_distritos_ultima_fecha) %>%
     baseGroups = c("OpenStreetMap"),
     overlayGroups = c("Distritos"),
     options = layersControlOptions(collapsed = TRUE)
-  ) %>%  
+  ) %>%
+  addScaleBar(
+  ) %>%
   addMiniMap(
     toggleDisplay = TRUE,
     position = "bottomleft",
@@ -690,10 +698,10 @@ pastelfallecidos <- plot_ly(df_distritos_pastel_fallecidos,labels = ~ distrito,
 layout(title = "Cantidad de casos fallecidos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 120,
-                     r = 120,
-                     b = 120,
-                     t = 120,
+       margin = list(l = 80,
+                     r = 80,
+                     b = 80,
+                     t = 80,
                      pad = 5
                 )
 )
