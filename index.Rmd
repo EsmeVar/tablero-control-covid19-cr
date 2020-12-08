@@ -450,10 +450,10 @@ pastelpositivos <- plot_ly(df_distritos_pastel_positivos,labels = ~ distrito,
 layout(title = "Cantidad de casos positivos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 70,
-                     r = 70,
-                     b = 70,
-                     t = 70,
+       margin = list(l = 50,
+                     r = 50,
+                     b = 50,
+                     t = 50,
                      pad = 5
                 )
 )
@@ -533,10 +533,10 @@ pastelactivos <- plot_ly(df_distritos_pastel_activos,labels = ~ distrito,
 layout(title = "Cantidad de casos activos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 70,
-                     r = 70,
-                     b = 70,
-                     t = 70,
+       margin = list(l = 50,
+                     r = 50,
+                     b = 50,
+                     t = 50,
                      pad = 5
                 )
 )
@@ -615,10 +615,10 @@ pastelrecuperados <- plot_ly(df_distritos_pastel_recuperados,labels = ~ distrito
 layout(title = "Cantidad de casos recuperados por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 70,
-                     r = 70,
-                     b = 70,
-                     t = 70,
+       margin = list(l = 50,
+                     r = 50,
+                     b = 50,
+                     t = 50,
                      pad = 5
                 )
 )
@@ -698,10 +698,10 @@ pastelfallecidos <- plot_ly(df_distritos_pastel_fallecidos,labels = ~ distrito,
 layout(title = "Cantidad de casos fallecidos por distrito", 
        yaxis = list(title = ""),
        xaxis = list(title = ""),
-       margin = list(l = 70,
-                     r = 70,
-                     b = 70,
-                     t = 70,
+       margin = list(l = 50,
+                     r = 50,
+                     b = 50,
+                     t = 50,
                      pad = 5
                 )
 )
